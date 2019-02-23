@@ -1,1 +1,42 @@
 The first regession analysis we will do is called a logistic regression, which is a type of linear regession with our y variable as a binary output
+
+# Download data from https://www.dropbox.com/s/6g4669dift70vvn/heights_weights.csv
+
+library(readr)
+library(caret)
+library(MASS)
+library(ggplot2)
+
+data<-read.csv("heights_weights.csv")
+#this code will let you see the column names so you can reference them later.
+
+colnames(data)
+#make a plot to look at the distribution of points with respect to sex.
+
+ggplot(data, aes(x=Height, y=Weight, color=Male))+
+  geom_point()+
+  geom_smooth(lm=sex_fits)
+  
+
+
+
+lm(data$Height~data$Weight)
+plot(lm(data$Height~data$Weight))
+
+data$Male<-factor(data$Male)
+contrasts(data$Male)
+
+inTrain_sex<-createDataPartition(y=data$Male, p=.6, list=F)
+training_sex<-data[inTrain_sex,]
+testing_sex<-data[-inTrain_sex,]
+sex_fits<-glm(Male~Weight+Height, data = testing_sex, family = binomial)
+summary(sex_fits)
+
+
+sex.prob = predict(sex_fits, testing_sex, type="response")
+sex.pred = rep(0, dim(training_sex)[1])
+sex.pred[sex.prob > .5] = 1
+table(sex.pred, training_sex$Male)
+mean(sex.pred == training_sex$Male)
+predict(sex_fits, newdata=data.frame(Weight=c(150, 175), Height=c(65, 67)), type="response")
+
