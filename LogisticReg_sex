@@ -8,35 +8,47 @@ library(MASS)
 library(ggplot2)
 
 data<-read.csv("heights_weights.csv")
+
 #this code will let you see the column names so you can reference them later.
 
 colnames(data)
+
 #make a plot to look at the distribution of points with respect to sex.
 
 ggplot(data, aes(x=Height, y=Weight, color=Male))+
-  geom_point()+
-  geom_smooth(lm=sex_fits)
+  geom_point()
   
-
-
-
-lm(data$Height~data$Weight)
-plot(lm(data$Height~data$Weight))
+#Our data is 0 and 1. to make sure they are factor with different levels, and not numeric, we need to use the factor code.
 
 data$Male<-factor(data$Male)
+#look at the data
 contrasts(data$Male)
+
+#next we need to create a training population and testing population to build our model with. We will use 60% for training and 40% for testing our model
 
 inTrain_sex<-createDataPartition(y=data$Male, p=.6, list=F)
 training_sex<-data[inTrain_sex,]
 testing_sex<-data[-inTrain_sex,]
+
+Now the fun part of creating our model. glm() funciton is a general linear model and we want to set our y variable to Male (which is the variable for sex) and the x's to Height + Weight because we are interested in both of those varibles 
+The data is the testing data set we created and familiy describes the data type we are looking at. Because the y variable is binomial we set family=binomial.
+
 sex_fits<-glm(Male~Weight+Height, data = testing_sex, family = binomial)
+
+#Take a look at the model
 summary(sex_fits)
 
+#Now we want to use this model to predict y values based on the test dataset
 
 sex.prob = predict(sex_fits, testing_sex, type="response")
 sex.pred = rep(0, dim(training_sex)[1])
 sex.pred[sex.prob > .5] = 1
 table(sex.pred, training_sex$Male)
 mean(sex.pred == training_sex$Male)
+
+#now predict the probability of the two made up people will be Male. 
+
 predict(sex_fits, newdata=data.frame(Weight=c(150, 175), Height=c(65, 67)), type="response")
+
+You can use the result 1-result to determine proability that the person will be female.
 
